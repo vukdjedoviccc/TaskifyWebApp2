@@ -1,4 +1,4 @@
-﻿# Taskify - Task Management Application
+# Taskify - Task Management Application
 
 Fullstack aplikacija za upravljanje projektima i taskovima sa **Kanban board-om**.
 Kreirana koriscenjem **Angular 21 + Signals + TailwindCSS** na frontendu i **Node.js + Express 5 + Prisma + SQL Server** na backendu.
@@ -10,7 +10,7 @@ Kreirana koriscenjem **Angular 21 + Signals + TailwindCSS** na frontendu i **Nod
 Taskify je moderna task management aplikacija koja omogucava korisnicima da organizuju svoj rad kroz:
 
 - **Projekte** - Grupisanje taskova po projektima
-- **Kanban Board** - Vizuelni prikaz taskova sa drag & drop funkcionalnoÅ¡cu
+- **Kanban Board** - Vizuelni prikaz taskova sa drag & drop funkcionalnošcu
 - **Kolone** - Prilagodljive kolone (To Do, In Progress, Done, ili custom)
 - **Taskovi** - Detaljni taskovi sa prioritetima, rokovima, kategorijama i dodeljivanjem
 - **Kalendar** - Mesecni prikaz svih taskova sa rokovima
@@ -100,38 +100,40 @@ Taskify je moderna task management aplikacija koja omogucava korisnicima da orga
 | **bcryptjs** | Hashovanje lozinki |
 | **cookie-parser** | Parsiranje cookies |
 | **nodemailer** | Slanje email-ova |
+| **swagger-jsdoc** | API dokumentacija |
+| **swagger-ui-express** | Swagger UI |
 
 ---
 
 ## Arhitektura
 
-`
+```
 TaskifyWebApp/
-|-- client/                     # Angular frontend
-|   |-- src/
-|   |   |-- app/
-|   |   |   |-- core/           # Services, guards, models, interceptors
-|   |   |   |-- layout/         # Navbar
-|   |   |   |-- pages/          # Route components
-|   |   |   +-- shared/         # Reusable components (Button, Input, Modal)
-|   |   +-- styles.css          # Global styles + Tailwind
-|   +-- package.json
-|
-|-- server/                     # Node.js backend
-|   |-- prisma/
-|   |   |-- schema.prisma       # Database schema (7 modela)
-|   |   |-- migrations/         # 5 SQL migracija
-|   |   +-- seed.js             # Test data seeder
-|   |-- src/
-|   |   |-- config/             # Environment config, email
-|   |   |-- controllers/        # Route handlers (7 kontrolera)
-|   |   |-- middleware/         # Auth, role checking
-|   |   |-- routes/             # API routes (7 fajlova)
-|   |   +-- server.js           # Entry point
-|   +-- package.json
-|
-+-- README.md
-`
+├── client/                          # Angular frontend
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── core/                # Services, guards, models, interceptors
+│   │   │   ├── layout/              # Navbar
+│   │   │   ├── pages/               # Route components
+│   │   │   └── shared/              # Reusable components (Button, Input, Modal)
+│   │   └── styles.css               # Global styles + Tailwind
+│   └── package.json
+│
+├── server/                          # Node.js backend
+│   ├── prisma/
+│   │   ├── schema.prisma            # Database schema (7 modela)
+│   │   ├── migrations/              # 5 SQL migracija
+│   │   └── seed.js                  # Test data seeder
+│   ├── src/
+│   │   ├── config/                  # Environment config, email
+│   │   ├── controllers/             # Route handlers (7 kontrolera)
+│   │   ├── middleware/              # Auth, role checking
+│   │   ├── routes/                  # API routes (7 fajlova)
+│   │   └── server.js                # Entry point
+│   └── package.json
+│
+└── README.md
+```
 
 ---
 
@@ -139,51 +141,73 @@ TaskifyWebApp/
 
 ### Entiteti (7 modela)
 
-`
-User
-|-- id, name, email, password
-|-- role (USER | MODERATOR | ADMIN)
-|-- createdAt, updatedAt
-+-- Relacije: ownedProjects, createdTasks, assignedTasks, notifications
+**User**
+| Polje | Tip | Opis |
+|-------|-----|------|
+| id | Int | Primary key |
+| name | String | Ime korisnika |
+| email | String | Email (unique) |
+| password | String | Hashована lozinka |
+| role | Enum | USER, MODERATOR, ADMIN |
+| createdAt | DateTime | Datum kreiranja |
+| updatedAt | DateTime | Datum izmene |
 
-Project
-|-- id, name, description, color
-|-- ownerId -> User
-|-- createdAt, updatedAt
-+-- Relacije: owner, boards, labels
+**Project**
+| Polje | Tip | Opis |
+|-------|-----|------|
+| id | Int | Primary key |
+| name | String | Naziv projekta |
+| description | String? | Opis projekta |
+| color | String | Boja projekta |
+| ownerId | Int | FK -> User |
 
-Board
-|-- id, name, projectId -> Project
-|-- createdAt, updatedAt
-+-- Relacije: project, columns
+**Board**
+| Polje | Tip | Opis |
+|-------|-----|------|
+| id | Int | Primary key |
+| name | String | Naziv board-a |
+| projectId | Int | FK -> Project |
 
-Column
-|-- id, name, boardId -> Board
-|-- position, color
-|-- createdAt, updatedAt
-+-- Relacije: board, tasks
+**Column**
+| Polje | Tip | Opis |
+|-------|-----|------|
+| id | Int | Primary key |
+| name | String | Naziv kolone |
+| position | Int | Redosled |
+| color | String | Boja kolone |
+| boardId | Int | FK -> Board |
 
-Task
-|-- id, title, description
-|-- columnId -> Column, createdById -> User, assigneeId -> User (nullable)
-|-- labelId -> Label (nullable, 1 labela po tasku)
-|-- position, priority (LOW | MEDIUM | HIGH | URGENT)
-|-- dueDate
-|-- createdAt, updatedAt
-+-- Relacije: column, createdBy, assignee, label
+**Task**
+| Polje | Tip | Opis |
+|-------|-----|------|
+| id | Int | Primary key |
+| title | String | Naslov taska |
+| description | String? | Opis taska |
+| priority | Enum | LOW, MEDIUM, HIGH, URGENT |
+| dueDate | DateTime? | Rok |
+| position | Int | Redosled u koloni |
+| columnId | Int | FK -> Column |
+| assigneeId | Int? | FK -> User |
+| labelId | Int? | FK -> Label |
 
-Label
-|-- id, name, color, projectId -> Project
-|-- createdAt
-+-- Relacije: project, tasks
+**Label**
+| Polje | Tip | Opis |
+|-------|-----|------|
+| id | Int | Primary key |
+| name | String | Naziv labele |
+| color | String | Boja labele |
+| projectId | Int | FK -> Project |
 
-Notification
-|-- id, userId -> User
-|-- type (TASK_ASSIGNED | TASK_DUE_SOON)
-|-- title, message, link, isRead
-|-- createdAt
-+-- Relacije: user
-`
+**Notification**
+| Polje | Tip | Opis |
+|-------|-----|------|
+| id | Int | Primary key |
+| userId | Int | FK -> User |
+| type | Enum | TASK_ASSIGNED, TASK_DUE_SOON |
+| title | String | Naslov notifikacije |
+| message | String | Poruka |
+| link | String? | Link ka resursu |
+| isRead | Boolean | Da li je procitano |
 
 ---
 
@@ -198,6 +222,24 @@ Projekat sadrzi 5 SQL Server migracija:
 | 3 | add_foreign_keys_and_indexes | ADD FOREIGN KEY, ADD INDEX |
 | 4 | alter_columns_and_constraints | ADD CHECK CONSTRAINT (priority, role) |
 | 5 | optimization_cleanup | DROP COLUMN/INDEX (cleanup) |
+
+---
+
+## API Dokumentacija (Swagger)
+
+API dokumentacija je dostupna preko Swagger UI:
+
+**URL:** `http://localhost:8081/api-docs`
+
+### Swagger Features:
+- Interaktivna API dokumentacija
+- Try it out - testiranje endpoint-a direktno iz browser-a
+- Request/Response primeri
+- Schema modeli
+
+### Pristup Swagger UI:
+1. Pokreni backend server: `cd server && npm run dev`
+2. Otvori browser: `http://localhost:8081/api-docs`
 
 ---
 
@@ -283,21 +325,21 @@ Projekat sadrzi 5 SQL Server migracija:
 
 ### 1. Kloniraj repozitorijum
 
-`ash
+```bash
 git clone https://github.com/elab-development/internet-tehnologije-2025-task_management_veb_aplikacija_2022_0086.git
 cd internet-tehnologije-2025-task_management_veb_aplikacija_2022_0086
-`
+```
 
 ### 2. Backend Setup
 
-`ash
+```bash
 cd server
 npm install
-`
+```
 
-Kreiraj .env fajl:
+Kreiraj `.env` fajl:
 
-`env
+```env
 PORT=8081
 NODE_ENV=development
 DATABASE_URL="sqlserver://localhost:1433;database=taskify;user=sa;password=YourPassword;encrypt=true;trustServerCertificate=true"
@@ -305,28 +347,28 @@ JWT_SECRET=your_super_secret_jwt_key_here
 JWT_EXPIRES_IN=7d
 COOKIE_NAME=taskify_token
 CORS_ORIGIN=http://localhost:4200
-`
+```
 
 Pokreni migracije i seed:
 
-`ash
+```bash
 npx prisma migrate dev
 node prisma/seed.js
-`
+```
 
 Pokreni server:
 
-`ash
+```bash
 npm run dev
-`
+```
 
 ### 3. Frontend Setup
 
-`ash
+```bash
 cd client
 npm install
 npm start
-`
+```
 
 ---
 
@@ -334,7 +376,7 @@ npm start
 
 Projekat podrzava Docker deployment:
 
-`ash
+```bash
 # Build i pokretanje svih servisa
 docker-compose up --build
 
@@ -343,7 +385,7 @@ docker-compose build
 
 # Pokretanje u background-u
 docker-compose up -d
-`
+```
 
 ### Docker Compose servisi:
 
@@ -359,8 +401,9 @@ docker-compose up -d
 
 | Servis | URL | Komanda |
 |--------|-----|---------|
-| Backend | http://localhost:8081 | cd server && npm run dev |
-| Frontend | http://localhost:4200 | cd client && npm start |
+| Backend | http://localhost:8081 | `cd server && npm run dev` |
+| Frontend | http://localhost:4200 | `cd client && npm start` |
+| Swagger | http://localhost:8081/api-docs | Automatski sa backendom |
 
 ---
 
