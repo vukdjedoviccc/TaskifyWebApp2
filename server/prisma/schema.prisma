@@ -19,6 +19,7 @@ model User {
 
   ownedProjects  Project[]       @relation("ProjectOwner")
   memberships    ProjectMember[]
+  assignedTasks  Task[]          @relation("TaskAssignee")
 }
 
 model Project {
@@ -32,6 +33,7 @@ model Project {
   owner   User            @relation("ProjectOwner", fields: [ownerId], references: [id])
   members ProjectMember[]
   boards  Board[]
+  labels  Label[]
 }
 
 model ProjectMember {
@@ -55,4 +57,52 @@ model Board {
   updatedAt DateTime @updatedAt
 
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  columns Column[]
+}
+
+model Column {
+  id       Int    @id @default(autoincrement())
+  name     String
+  position Int
+  boardId  Int
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  priority    String    @default("MEDIUM")
+  dueDate     DateTime?
+  position    Int
+  columnId    Int
+  assigneeId  Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  column   Column      @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  assignee User?       @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  labels   TaskLabel[]
+}
+
+model Label {
+  id        Int      @id @default(autoincrement())
+  name      String
+  color     String
+  projectId Int
+
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   TaskLabel[]
+}
+
+model TaskLabel {
+  taskId  Int
+  labelId Int
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
 }
